@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard | StyleLane</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            background: #f7f9fc;
+        }
+        nav {
+            background: #111;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        nav h2 {
+            color: white;
+            margin: 0;
+        }
+        nav span {
+            color: #c59d5f;
+        }
+        nav a {
+            color: white;
+            margin-left: 20px;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        nav a:hover {
+            color: #c59d5f;
+        }
+        .container {
+            padding: 40px;
+        }
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 14px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        }
+        h3 {
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <h2>Style<span>Lane</span></h2>
+    <div>
+        <a href="/home">Home</a>
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
+        <a href="/logout">Logout</a>
+    </div>
+</nav>
+
+<div class="container">
+
+    <div class="card">
+        <h3>Users</h3>
+        <ul>
+            {% for u in users %}
+            <li>{{ u }} - {{ users[u].role }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="card">
+        <h3>Inventory Overview</h3>
+        <ul>
+            {% for pid, p in inventory.items() %}
+            <li>{{ pid }} - {{ p.name }} | Stock: {{ p.stock }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+</div>
+
+</body>
+</html>

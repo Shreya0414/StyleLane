@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login | StyleLane</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            height:100vh; display:flex; justify-content:center; align-items:center;
+            background:linear-gradient(120deg,#f5f7fa,#e4ecf5);
+            font-family:'Poppins',sans-serif;
+        }
+        .login {
+            width:380px; background:white; padding:40px;
+            border-radius:18px; box-shadow:0 30px 60px rgba(0,0,0,.15);
+        }
+        h1 { text-align:center; margin-bottom:5px; }
+        h1 span { color:#c59d5f; }
+        p { text-align:center; color:#777; font-size:14px; }
+        input {
+            width:100%; padding:12px; margin-top:15px;
+            border-radius:10px; border:1px solid #ddd;
+        }
+        button {
+            width:100%; padding:14px; margin-top:25px;
+            background:#111; color:white; border:none;
+            border-radius:12px; cursor:pointer;
+        }
+        button:hover { background:#c59d5f; color:#111; }
+    </style>
+</head>
+<body>
+
+<div class="login">
+    <h1>Style<span>Lane</span></h1>
+    <p>Smart Fashion Inventory System</p>
+
+    <form method="POST">
+        <input type="email" name="email" placeholder="you@stylelane.com" required>
+        <input type="password" name="password" placeholder="••••••••" required>
+        <button type="submit">Login</button>
+    </form>
+</div>
+
+</body>
+</html>
