@@ -1,24 +1,14 @@
 from flask import Flask, render_template, request, redirect, url_for, session
+from werkzeug.security import check_password_hash
+import os
+import uuid
+
+from aws_config import users_table, inventory_table, shipments_table, sns, SNS_TOPIC_ARN
 
 app = Flask(__name__)
-app.secret_key = "stylelane_secret_key"
+app.secret_key = os.environ.get("SECRET_KEY", "dev_fallback")
 
-# ---------------- LOCAL DATA (TEMPORARY) ---------------- #
-
-users = {
-    "admin@stylelane.com": {"password": "admin123", "role": "admin"},
-    "manager@stylelane.com": {"password": "manager123", "role": "manager"},
-    "supplier@stylelane.com": {"password": "supplier123", "role": "supplier"}
-}
-
-inventory = {
-    "ZARA101": {"name": "Zara Denim Jacket", "stock": 25, "threshold": 10},
-    "ZARA102": {"name": "Zara Cotton Shirt", "stock": 8, "threshold": 10},
-}
-
-shipments = []
-
-# ---------------- ROUTES ---------------- #
+# ---------------- LOGIN ---------------- #
 
 @app.route("/", methods=["GET", "POST"])
 def login():
@@ -26,13 +16,16 @@ def login():
         email = request.form["email"]
         password = request.form["password"]
 
-        if email in users and users[email]["password"] == password:
-            session["user"] = email
-            session["role"] = users[email]["role"]
+        response = users_table.get_item(Key={"email": email})
+        user = response.get("Item")
 
-            if session["role"] == "admin":
+        if user and check_password_hash(user["password"], password):
+            session["user"] = email
+            session["role"] = user["role"]
+
+            if user["role"] == "admin":
                 return redirect(url_for("admin_dashboard"))
-            elif session["role"] == "manager":
+            elif user["role"] == "manager":
                 return redirect(url_for("manager_dashboard"))
             else:
                 return redirect(url_for("supplier_dashboard"))
@@ -41,8 +34,7 @@ def login():
 
     return render_template("login.html")
 
-
-# ---------- NEW PUBLIC PAGES ---------- #
+# ---------------- PUBLIC PAGES ---------------- #
 
 @app.route("/home")
 def home():
@@ -56,13 +48,19 @@ def about():
 def contact():
     return render_template("contact.html")
 
-
-# ---------- DASHBOARDS ---------- #
+# ---------------- ADMIN ---------------- #
 
 @app.route("/admin")
 def admin_dashboard():
-    return render_template("admin_dashboard.html", inventory=inventory, users=users)
+    users = users_table.scan().get("Items", [])
+    inventory = inventory_table.scan().get("Items", [])
+    return render_template(
+        "admin_dashboard.html",
+        users=users,
+        inventory=inventory
+    )
 
+# ---------------- MANAGER ---------------- #
 
 @app.route("/manager", methods=["GET", "POST"])
 def manager_dashboard():
@@ -70,17 +68,26 @@ def manager_dashboard():
         product_id = request.form["product_id"]
         new_stock = int(request.form["stock"])
 
-        inventory[product_id]["stock"] = new_stock
+        inventory_table.update_item(
+            Key={"product_id": product_id},
+            UpdateExpression="SET stock = :s",
+            ExpressionAttributeValues={":s": new_stock}
+        )
 
-    low_stock = {
-        pid: p for pid, p in inventory.items()
-        if p["stock"] < p["threshold"]
-    }
+        product = inventory_table.get_item(Key={"product_id": product_id})["Item"]
+        if product["stock"] < product["threshold"]:
+            send_low_stock_alert(product)
 
-    return render_template("manager_dashboard.html",
-                           inventory=inventory,
-                           low_stock=low_stock)
+    inventory = inventory_table.scan().get("Items", [])
+    low_stock = [p for p in inventory if p["stock"] < p["threshold"]]
 
+    return render_template(
+        "manager_dashboard.html",
+        inventory=inventory,
+        low_stock=low_stock
+    )
+
+# ---------------- SUPPLIER ---------------- #
 
 @app.route("/supplier", methods=["GET", "POST"])
 def supplier_dashboard():
@@ -88,23 +95,53 @@ def supplier_dashboard():
         product_id = request.form["product_id"]
         quantity = int(request.form["quantity"])
 
-        inventory[product_id]["stock"] += quantity
-        shipments.append({
-            "product_id": product_id,
-            "quantity": quantity,
-            "status": "Dispatched"
-        })
+        inventory_table.update_item(
+            Key={"product_id": product_id},
+            UpdateExpression="SET stock = stock + :q",
+            ExpressionAttributeValues={":q": quantity}
+        )
 
-    return render_template("supplier_dashboard.html",
-                           inventory=inventory,
-                           shipments=shipments)
+        shipments_table.put_item(
+            Item={
+                "shipment_id": str(uuid.uuid4()),
+                "product_id": product_id,
+                "quantity": quantity,
+                "status": "Dispatched"
+            }
+        )
 
+    inventory = inventory_table.scan().get("Items", [])
+    shipments = shipments_table.scan().get("Items", [])
+
+    return render_template(
+        "supplier_dashboard.html",
+        inventory=inventory,
+        shipments=shipments
+    )
+
+# ---------------- LOGOUT ---------------- #
 
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect(url_for("login"))
 
+# ---------------- SNS ---------------- #
+
+def send_low_stock_alert(product):
+    message = f"""
+LOW STOCK ALERT 🚨
+
+Product: {product['name']}
+Current Stock: {product['stock']}
+"""
+    sns.publish(
+        TopicArn=SNS_TOPIC_ARN,
+        Message=message,
+        Subject="StyleLane Low Stock Alert"
+    )
+
+# ---------------- RUN ---------------- #
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000)
