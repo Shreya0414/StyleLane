@@ -1,17 +1,20 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Supplier Dashboard</title>
 </head>
+
 <body>
     <h2>Supplier Dashboard</h2>
 
     <h3>Dispatch Shipment</h3>
     <form method="POST">
         <select name="product_id">
-            {% for pid in inventory %}
-            <option value="{{ pid }}">{{ inventory[pid].name }}</option>
+            {% for p in inventory %}
+            <option value="{{ p.product_id }}">{{ p.name }}</option>
             {% endfor %}
+
         </select>
         <input type="number" name="quantity" required>
         <button type="submit">Dispatch</button>
@@ -26,4 +29,5 @@
 
     <a href="/logout">Logout</a>
 </body>
+
 </html>
