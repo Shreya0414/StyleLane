@@ -688,7 +688,7 @@ def server_error(e):
 
 if __name__ == '__main__':
     debug = os.environ.get('FLASK_DEBUG', 'false').lower() == 'true'
-    host = os.environ.get('FLASK_HOST', '127.0.0.1')
+    host = os.environ.get('FLASK_HOST', '0.0.0.0')
     port = int(os.environ.get('PORT', 5000))
 
     print("=" * 70)
