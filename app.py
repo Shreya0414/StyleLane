@@ -36,6 +36,7 @@ NOTIFICATIONS_TABLE = os.environ.get('NOTIFICATIONS_TABLE', 'StyleLane_Notificat
 LOW_STOCK_TOPIC = os.environ.get('LOW_STOCK_TOPIC', None)
 SHIPMENT_TOPIC = os.environ.get('SHIPMENT_TOPIC', None)
 
+SNS_TOPIC_ARN='arn:aws:sns:us-east-1:050752646908:StyleLane'
 # Business Logic
 LOW_STOCK_THRESHOLD = int(os.environ.get('LOW_STOCK_THRESHOLD', '10'))
 
