@@ -29,6 +29,7 @@ SHIPMENTS_TABLE = os.environ.get('SHIPMENTS_TABLE', 'StyleLane_Shipments')
 LOW_STOCK_TOPIC = os.environ.get('LOW_STOCK_TOPIC')
 SHIPMENT_TOPIC = os.environ.get('SHIPMENT_TOPIC')
 
+SNS_TOPIC_ARN='arn:aws:sns:us-east-1:050752646908:StyleLane'
 LOW_STOCK_THRESHOLD = int(os.environ.get('LOW_STOCK_THRESHOLD', 10))
 
 dynamodb = boto3.resource('dynamodb', region_name=AWS_REGION)
