@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Server Error{% endblock %}
+
+{% block content %}
+<div class="min-vh-100 d-flex align-items-center justify-content-center" style="background: var(--bg-cream);">
+    <div class="text-center">
+        <h1 style="font-size: 8rem; color: var(--accent); font-family: 'Playfair Display', serif;">500</h1>
+        <h2 class="mb-3">Server Error</h2>
+        <p class="text-muted mb-4">Something went wrong on our end. Please try again later.</p>
+        <a href="{{ url_for('index') }}" class="btn btn-primary">
+            <i class="bi bi-house me-2"></i> Back to Home
+        </a>
+    </div>
+</div>
+{% endblock %}

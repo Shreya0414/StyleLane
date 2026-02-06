@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Supplier Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-content">
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="section-header">
+            <h2>Supplier Dashboard</h2>
+            <p>Welcome back, {{ session.name }}. Manage your shipments and restock requests.</p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="card stat-card" style="border-left-color: #f59e0b;">
+                    <div class="stat-number" style="color: #f59e0b;">{{ stats.pending_requests or 0 }}</div>
+                    <div class="stat-label">Pending Requests</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card stat-card" style="border-left-color: #3b82f6;">
+                    <div class="stat-number" style="color: #3b82f6;">{{ stats.active_shipments or 0 }}</div>
+                    <div class="stat-label">Active Shipments</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card stat-card" style="border-left-color: #10b981;">
+                    <div class="stat-number" style="color: #10b981;">{{ stats.completed_shipments or 0 }}</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Pending Requests -->
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="mb-0"><i class="bi bi-inbox text-warning me-2"></i> Pending Restock Requests</h5>
+                    </div>
+                    <div class="card-body">
+                        {% for request in pending_requests %}
+                        <div class="border rounded p-3 mb-3">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h6 class="mb-1">{{ request.product_name }}</h6>
+                                    <small class="text-muted">Quantity: {{ request.quantity }} units</small>
+                                </div>
+                                <span class="badge-status badge-pending">Pending</span>
+                            </div>
+                            <form method="POST" action="{{ url_for('update_shipment', shipment_id=request.shipment_id) }}">
+                                <div class="row g-2">
+                                    <div class="col-8">
+                                        <input type="text" class="form-control form-control-sm" name="tracking_number" placeholder="Tracking Number">
+                                    </div>
+                                    <div class="col-4">
+                                        <input type="hidden" name="status" value="shipped">
+                                        <button type="submit" class="btn btn-sm btn-primary w-100">Ship Now</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                            <p class="text-muted mt-2 mb-0">No pending requests</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Shipments -->
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="mb-0"><i class="bi bi-truck text-primary me-2"></i> Active Shipments</h5>
+                    </div>
+                    <div class="card-body">
+                        {% for shipment in active_shipments %}
+                        <div class="border rounded p-3 mb-3">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h6 class="mb-1">{{ shipment.product_name }}</h6>
+                                    <small class="text-muted">
+                                        {{ shipment.quantity }} units
+                                        {% if shipment.tracking_number %}
+                                        <br>Tracking: {{ shipment.tracking_number }}
+                                        {% endif %}
+                                    </small>
+                                </div>
+                                <span class="badge-status badge-shipped">In Transit</span>
+                            </div>
+                            <form method="POST" action="{{ url_for('update_shipment', shipment_id=shipment.shipment_id) }}">
+                                <input type="hidden" name="status" value="delivered">
+                                <button type="submit" class="btn btn-sm btn-accent w-100">Mark as Delivered</button>
+                            </form>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-truck text-muted" style="font-size: 3rem;"></i>
+                            <p class="text-muted mt-2 mb-0">No active shipments</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Shipment History -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                        <h5 class="mb-0">Shipment History</h5>
+                        <a href="{{ url_for('shipments') }}" class="btn btn-sm btn-outline-dark">View All</a>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Shipment ID</th>
+                                        <th>Product</th>
+                                        <th>Quantity</th>
+                                        <th>Tracking</th>
+                                        <th>Status</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for shipment in shipments %}
+                                    <tr>
+                                        <td><code>{{ shipment.shipment_id[:8] }}...</code></td>
+                                        <td>{{ shipment.product_name }}</td>
+                                        <td>{{ shipment.quantity }} units</td>
+                                        <td>{{ shipment.tracking_number or 'N/A' }}</td>
+                                        <td>
+                                            <span class="badge-status badge-{{ shipment.status }}">{{ shipment.status }}</span>
+                                        </td>
+                                        <td>{{ shipment.requested_at[:10] if shipment.requested_at else 'N/A' }}</td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4 text-muted">No shipments found</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

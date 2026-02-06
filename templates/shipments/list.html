@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Shipments{% endblock %}
+
+{% block content %}
+<div class="dashboard-content">
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="section-header d-flex justify-content-between align-items-center">
+            <div>
+                <h2>Shipments</h2>
+                <p>Track all shipments and delivery statuses</p>
+            </div>
+            {% if session.role in ['admin', 'store_manager'] %}
+            <a href="{{ url_for('request_shipment') }}" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-2"></i> Request Restock
+            </a>
+            {% endif %}
+        </div>
+
+        <!-- Shipments Table -->
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Shipment ID</th>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Supplier</th>
+                                <th>Tracking</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for shipment in shipments %}
+                            <tr>
+                                <td><code>{{ shipment.shipment_id[:8] }}...</code></td>
+                                <td><strong>{{ shipment.product_name }}</strong></td>
+                                <td>{{ shipment.quantity }} units</td>
+                                <td>{{ shipment.supplier_name }}</td>
+                                <td>{{ shipment.tracking_number or 'N/A' }}</td>
+                                <td>
+                                    <span class="badge-status badge-{{ shipment.status }}">{{ shipment.status }}</span>
+                                </td>
+                                <td>{{ shipment.requested_at[:10] if shipment.requested_at else 'N/A' }}</td>
+                                <td>
+                                    {% if session.role == 'supplier' and shipment.status == 'pending' %}
+                                    <form method="POST" action="{{ url_for('update_shipment', shipment_id=shipment.shipment_id) }}" class="d-inline">
+                                        <input type="hidden" name="status" value="shipped">
+                                        <button type="submit" class="btn btn-sm btn-primary">Ship</button>
+                                    </form>
+                                    {% elif session.role == 'supplier' and shipment.status == 'shipped' %}
+                                    <form method="POST" action="{{ url_for('update_shipment', shipment_id=shipment.shipment_id) }}" class="d-inline">
+                                        <input type="hidden" name="status" value="delivered">
+                                        <button type="submit" class="btn btn-sm btn-accent">Delivered</button>
+                                    </form>
+                                    {% elif session.role == 'store_manager' and shipment.status == 'delivered' %}
+                                    <form method="POST" action="{{ url_for('receive_shipment', shipment_id=shipment.shipment_id) }}" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-accent">Receive</button>
+                                    </form>
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="8" class="text-center py-4 text-muted">No shipments found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

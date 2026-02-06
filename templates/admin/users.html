@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}User Management{% endblock %}
+
+{% block content %}
+<div class="dashboard-content">
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="section-header">
+            <h2>User Management</h2>
+            <p>Manage user accounts and role assignments</p>
+        </div>
+
+        <!-- Users Table -->
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Email</th>
+                                <th>Current Role</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="user-avatar me-3">{{ user.name[0] }}</div>
+                                        <strong>{{ user.name }}</strong>
+                                    </div>
+                                </td>
+                                <td>{{ user.email }}</td>
+                                <td>
+                                    <span class="role-badge role-{{ user.role }}">{{ user.role.replace('_', ' ') }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge-status badge-delivered">{{ user.status or 'Active' }}</span>
+                                </td>
+                                <td>{{ user.created_at[:10] if user.created_at else 'N/A' }}</td>
+                                <td>
+                                    {% if user.user_id != session.user_id %}
+                                    <form method="POST" action="{{ url_for('update_user_role', user_id=user.user_id) }}" class="d-inline">
+                                        <select name="role" class="form-select form-select-sm d-inline-block" style="width: auto;" onchange="this.form.submit()">
+                                            <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
+                                            <option value="store_manager" {% if user.role == 'store_manager' %}selected{% endif %}>Store Manager</option>
+                                            <option value="supplier" {% if user.role == 'supplier' %}selected{% endif %}>Supplier</option>
+                                        </select>
+                                    </form>
+                                    {% else %}
+                                    <span class="text-muted">Current User</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted">No users found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

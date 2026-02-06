@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Update Stock{% endblock %}
+
+{% block content %}
+<div class="dashboard-content">
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="section-header">
+            <h2>Update Stock</h2>
+            <p>Modify inventory levels for {{ product.name }}</p>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-body p-4">
+                        <div class="mb-4">
+                            <h4>{{ product.name }}</h4>
+                            <span class="text-muted">SKU: {{ product.sku }}</span>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-6">
+                                <div class="text-muted small">Category</div>
+                                <div><strong>{{ product.category }}</strong></div>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-muted small">Brand</div>
+                                <div><strong>{{ product.brand }}</strong></div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-6">
+                                <div class="text-muted small">Current Stock</div>
+                                <div>
+                                    {% if product.quantity|int < 10 %}
+                                    <span class="badge-status badge-low-stock">{{ product.quantity }} units</span>
+                                    {% else %}
+                                    <span class="badge-status badge-delivered">{{ product.quantity }} units</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-muted small">Price</div>
+                                <div><strong>${{ product.price }}</strong></div>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <form method="POST" action="{{ url_for('update_product', product_id=product.product_id) }}">
+                            <div class="mb-4">
+                                <label class="form-label">New Stock Quantity *</label>
+                                <input type="number" class="form-control form-control-lg" name="quantity" 
+                                       value="{{ product.quantity }}" min="0" required>
+                                <small class="text-muted">Low stock alerts will trigger when quantity falls below 10</small>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <a href="{{ url_for('products') }}" class="btn btn-outline-dark">Cancel</a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-lg me-2"></i> Update Stock
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="mb-0">Request Restock</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-4">Need more stock? Send a restock request to your suppliers.</p>
+                        <form method="POST" action="{{ url_for('request_shipment') }}">
+                            <input type="hidden" name="product_id" value="{{ product.product_id }}">
+                            <input type="hidden" name="product_name" value="{{ product.name }}">
+                            <div class="mb-3">
+                                <label class="form-label">Quantity to Request</label>
+                                <input type="number" class="form-control" name="quantity" value="50" min="1" required>
+                            </div>
+                            <button type="submit" class="btn btn-accent w-100">
+                                <i class="bi bi-send me-2"></i> Send Restock Request
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
